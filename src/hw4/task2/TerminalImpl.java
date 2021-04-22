@@ -5,30 +5,44 @@ import java.io.IOException;
 public class TerminalImpl implements Terminal {
 
     private final TerminalServer server;
-    private final PinValidator pinValidator;
-    double timeOfLock = -1000.0;
+    private final PinValidator validator;
 
+    double timeOfLock = -100000.0;
 
-    public TerminalImpl(String pin) {
-        this.server = new TerminalServer();
-        this.pinValidator = new PinValidator(pin);
+    /**
+     * Constructs Termainal object with TerminalServer
+     * and PinValidator.
+     *
+     * @param ts TerminalServer
+     *        pv PinValidator
+     */
+    public TerminalImpl(TerminalServer ts, PinValidator pv) {
+        this.server = ts;
+        this.validator = pv;
     }
 
+    /**
+     * Checks balance.
+     */
     public Integer balance() {
         return server.balance();
     }
 
+    /**
+     * Checks how much time has passed since last lock.
+     */
     private void checkLock() throws AccountIsLockedException {
         double tdiff = (System.currentTimeMillis() - timeOfLock) / 1000.0;
         if (tdiff < 10.0) {
             throw new AccountIsLockedException(String.format(
-                    "Ошибка доступа: аккаунт заблокирован на %.2f секунд", tdiff));
+                    "Access error: account will be locked for %.2f seconds", 10.0 - tdiff));
         }
     }
 
-    private boolean checkPIN() throws IOException {
-
-        // Scanner scan = new Scanner(System.in);
+    /**
+     * Checks PIN.
+     */
+    private boolean checkPIN() throws Exception {
 
         int pin_counter = 0;
         do {
@@ -41,15 +55,16 @@ public class TerminalImpl implements Terminal {
                     pin += c.toString();
                     ++i;
                 } else {
-                    System.out.println("Это не цифра.Повторите ввод.");
+                    System.out.print("Input is not a digit. Repeat");
+                    break;
                 }
             }
-            if (pinValidator.check(pin))
-                return true;
+            if (validator.check(pin))
+                break;
             ++pin_counter;
 
         } while (pin_counter <= 3);
-        //scan.close();
+
         if (pin_counter == 4) {
             timeOfLock = System.currentTimeMillis();//lock
             return false;
@@ -57,23 +72,25 @@ public class TerminalImpl implements Terminal {
         return true;
     }
 
-    public void put(Integer sum) {
-        try {
+    /**
+     * Puts sum onto account, if possible.
+     *
+     * @param sum sum to put
+     */
+    public void put(Integer sum) throws Exception{
             checkLock();
             checkPIN();
             server.put(sum);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
     }
 
-    public void withdraw(Integer sum) {
-        try {
+    /**
+     * Withdraws sum from account, if possible.
+     *
+     * @param sum sum to withdraw
+     */
+    public void withdraw(Integer sum) throws Exception{
             checkLock();
             checkPIN();
             server.withdraw(sum);
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
         }
-    }
 }

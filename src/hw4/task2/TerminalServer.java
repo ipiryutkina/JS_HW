@@ -10,13 +10,15 @@ public class TerminalServer {
 
     public void put(Integer sum) throws IllegalArgumentException {
         if (sum < 0 || sum % 100 > 0)
-            throw new IllegalArgumentException("Ошибка операции: невозможно положить данную сумму");
+            throw new IllegalArgumentException("Operation error: " +
+                    "cannot put negative or not divisible by 100 sum");
         amount += sum;
     }
 
     public void withdraw(Integer sum) throws IllegalArgumentException {
         if (sum < 0 || sum % 100 > 0 || sum > amount)
-            throw new IllegalArgumentException("Ошибка операции: невозможно снять данную сумму");
+            throw new IllegalArgumentException("Operation error: sum is" +
+                    " either: 1.not divisible by 100; 2.negative; 3.less than balance");
         amount -= sum;
     }
 }

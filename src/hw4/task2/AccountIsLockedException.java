@@ -18,5 +18,9 @@ public class AccountIsLockedException extends Exception {
         super(cause);
     }
 
+    public AccountIsLockedException(String message, Throwable cause, boolean enableSuppression,
+                                    boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 
 }

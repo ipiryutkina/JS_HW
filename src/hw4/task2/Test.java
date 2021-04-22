@@ -6,7 +6,10 @@ public class Test {
 
     public static void main(String[] args) throws Exception {
 
-        TerminalImpl ti = new TerminalImpl("1234");
+        PinValidator pv = new PinValidator("1234");
+        TerminalServer ts = new TerminalServer();
+        TerminalImpl ti = new TerminalImpl(ts, pv);
+
         ti.withdraw(100);
         ti.put(345);
         ti.put(200);
