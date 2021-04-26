@@ -26,6 +26,9 @@ public class Animal {
         this.age = age;
     }
 
+    private int test(){ return 0;}
+    protected void test1(){}
+
     @Override
     public String toString(){
         return String.format("Animal  %s , age %d", name, age);

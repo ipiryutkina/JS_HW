@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class BeanUtils {
     /**
@@ -40,7 +41,7 @@ public class BeanUtils {
         }
     }
 
-    private static boolean isGetter(Method method) {
+    public static boolean isGetter(Method method) {
         if (method == null)
             return false;
         if (!method.getName().startsWith("get"))
@@ -50,12 +51,30 @@ public class BeanUtils {
         return !void.class.equals(method.getReturnType());
     }
 
-    private static boolean isSetter(Method method) {
+    public static boolean isSetter(Method method) {
         if (method == null)
             return false;
         if (!method.getName().startsWith("set"))
             return false;
         return method.getParameterTypes().length == 1;
+    }
+
+
+    /**
+     * Prints all methods of object
+     * @param in Object which methods will be printed.
+     */
+    public static void printAllMethods(Object in, Predicate<Method> pred) {
+        printMe(in.getClass(), pred);
+    }
+
+    private static void printMe(Class c, Predicate<Method> pred) {
+        if (c == null)
+            return;
+        for (Method m: c.getDeclaredMethods())
+            if (pred.test(m))
+                System.out.println(m);
+        printMe(c.getSuperclass(), pred);
     }
 }
 
