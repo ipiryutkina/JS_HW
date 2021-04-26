@@ -1,6 +1,5 @@
 package hw5.BeanUtils;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -30,16 +29,16 @@ public class BeanUtils {
                 hm.put(m.getName(), m);
 
         for (Method getter : from.getClass().getMethods()) {
+            //System.out.println(getter.getName());
             if (isGetter(getter)) {
                 String setterName = "set" + getter.getName().substring(3);
                 Method setter = hm.get(setterName);
-                if (setter.getParameterTypes()[0].isInstance(getter.getReturnType()))
+                if (setter != null && setter.getParameterTypes()[0].isAssignableFrom(getter.getReturnType())) {
                     setter.invoke(to, getter.invoke(from));
+                }
             }
         }
-
     }
-
 
     private static boolean isGetter(Method method) {
         if (method == null)
@@ -48,9 +47,7 @@ public class BeanUtils {
             return false;
         if (method.getParameterTypes().length != 0)
             return false;
-        if (void.class.equals(method.getReturnType()))
-            return false;
-        return true;
+        return !void.class.equals(method.getReturnType());
     }
 
     private static boolean isSetter(Method method) {
@@ -58,9 +55,7 @@ public class BeanUtils {
             return false;
         if (!method.getName().startsWith("set"))
             return false;
-        if (method.getParameterTypes().length != 1)
-            return false;
-        return true;
+        return method.getParameterTypes().length == 1;
     }
 }
 

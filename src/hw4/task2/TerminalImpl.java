@@ -14,7 +14,7 @@ public class TerminalImpl implements Terminal {
      * and PinValidator.
      *
      * @param ts TerminalServer
-     *        pv PinValidator
+     *           pv PinValidator
      */
     public TerminalImpl(TerminalServer ts, PinValidator pv) {
         this.server = ts;
@@ -77,10 +77,10 @@ public class TerminalImpl implements Terminal {
      *
      * @param sum sum to put
      */
-    public void put(Integer sum) throws Exception{
-            checkLock();
-            checkPIN();
-            server.put(sum);
+    public void put(Integer sum) throws Exception {
+        checkLock();
+        checkPIN();
+        server.put(sum);
     }
 
     /**
@@ -88,9 +88,9 @@ public class TerminalImpl implements Terminal {
      *
      * @param sum sum to withdraw
      */
-    public void withdraw(Integer sum) throws Exception{
-            checkLock();
-            checkPIN();
-            server.withdraw(sum);
-        }
+    public void withdraw(Integer sum) throws Exception {
+        checkLock();
+        checkPIN();
+        server.withdraw(sum);
+    }
 }
