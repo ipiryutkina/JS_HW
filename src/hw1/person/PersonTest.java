@@ -3,14 +3,15 @@ package hw1.person;
 import java.io.PrintWriter;
 
 public class PersonTest {
-
+/*
     private static void printStatus(PrintWriter wr, Person p) {
         wr.printf("%s %s\n", p.getName(), p.isMarried() ? ("is married to " +
                 p.getSpouse().getName()) : "not married.");
     }
-
+*/
     public static void main(String[] args) throws Exception {
 
+        /*
         PrintWriter writer = new PrintWriter(System.out);
 
         Person m1 = new Person(true, "Иванов Иван");
@@ -34,6 +35,8 @@ public class PersonTest {
         printStatus(writer, f2);
 
         writer.close();
+        */
+
 
     }
 
