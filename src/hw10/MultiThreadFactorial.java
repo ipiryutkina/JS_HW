@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 import java.util.stream.LongStream;
 
 class FactTask implements Runnable {
@@ -19,8 +20,8 @@ class FactTask implements Runnable {
     public void run() {
         long res = LongStream.rangeClosed(1, n)
                 .reduce(1, (long x, long y) -> x * y);
-        System.out.println(String.format("Thread %s: fact(%d) = %d", Thread.currentThread().getName(),
-                n, res));
+        System.out.println(String.format("Thread %s: fact(%d) = %d",
+                Thread.currentThread().getName(), n, res));
     }
 }
 
@@ -44,8 +45,8 @@ public class MultiThreadFactorial {
         }
         */
 
-        ExecutorService pool = Executors.newCachedThreadPool();
-        //ExecutorService pool = Executors.newFixedThreadPool(MAX_T);
+        //ExecutorService pool = Executors.newCachedThreadPool();
+        ExecutorService pool = Executors.newFixedThreadPool(MAX_T);
         for (int i = 0; i < n; ++i) {
             pool.execute(new FactTask(integers.get(i)));
         }

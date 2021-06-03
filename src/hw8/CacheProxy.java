@@ -1,25 +1,27 @@
 package hw8;
 
-//import test.DynPxy;
-//import test.MyService;
-
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 
 public class CacheProxy implements InvocationHandler {
 
-    private final Map<Object, Object> resultByArg = new HashMap<>();
+    private final Map<Object, Object> resultByArg = new ConcurrentHashMap<>();
     private Service delegate = null;
-    private String rootDir;
+    private final String rootDir;
 
     private CacheProxy(Service delegate, String rootDir) {
         this.delegate = delegate;
@@ -27,7 +29,6 @@ public class CacheProxy implements InvocationHandler {
     }
 
     public CacheProxy(String rootDir) {
-        this.delegate = null;
         this.rootDir = rootDir;
     }
 
@@ -43,27 +44,36 @@ public class CacheProxy implements InvocationHandler {
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
         Cache cacheAn = method.getAnnotation(Cache.class);
-        if (cacheAn == null) return invoke(method, args);
+        if (cacheAn == null)
+            return invoke(method, args);
         //2
         List<Object> argsToCache = new ArrayList<>();
         Annotation[][] pa = method.getParameterAnnotations();
         for (int i = 0; i < pa.length; ++i) {
+            boolean fl = true;
             for (Annotation a : pa[i]) {
                 if (a instanceof Ignore)
-                    continue;
+                    fl = false;
+                break;
             }
-            argsToCache.add(args[i]);
+            if (fl) argsToCache.add(args[i]);
         }
 
+        List<Object> key = new ArrayList<>();
+        key.add(method);
+        key.addAll(Arrays.asList(argsToCache));
+
         Object invokeOut = null;
+        String name = Integer.toString(key.hashCode());
         if (cacheAn.cacheType() == CacheType.FILE) {
-            String path = "";
-            File file = new File(path);
-            if (file.exists()) {
-                invokeOut = readFromFile(path, cacheAn.zip());
+
+            File f = new File(rootDir, name + (cacheAn.zip() ? ".zip" : ".bin"));
+
+            if (f.exists()) {
+                invokeOut = readFromFile(name, cacheAn.zip());
             } else {
                 invokeOut = invoke(method, args);
-                writeToFile(invokeOut, path, cacheAn.zip());
+                writeToFile(invokeOut, name, cacheAn.zip());
             }
 
         } else if (cacheAn.cacheType() == CacheType.IN_MEMORY) {
@@ -76,65 +86,69 @@ public class CacheProxy implements InvocationHandler {
             }
 
         }
-
         return invokeOut;
     }
 
 
-    private Object readFromFile(String path, boolean zip) {
-    /*
-        byte[] stream = null;
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ObjectOutputStream oos = new ObjectOutputStream(baos);) {
-            oos.writeObject(obj);
-            stream = baos.toByteArray();
+    private Object readFromFile(String name, boolean zip) throws IOException, ClassNotFoundException {
+
+        byte[] bytes;
+        InputStream is = null;
+        File f = new File(rootDir, name + (zip?".zip":".bin"));
+        if (zip) {
+
+            FileInputStream fis = new FileInputStream(f);
+            BufferedInputStream bis = new BufferedInputStream(fis);
+            ZipInputStream stream = new ZipInputStream(bis);
+            ZipEntry entry = stream.getNextEntry();
+            ZipFile zipFile = new ZipFile(f);
+            is = zipFile.getInputStream(entry);
+            System.out.print(is.toString());
+        }
+        else{
+              is =  new FileInputStream(f);
         }
 
-        if (stream != null) {
-            path += (zip) ? ".zip" : ".ser";
-            if (zip) {//5
-                try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(path))) {
-                    ZipEntry zipEntry = new ZipEntry(path + ".bin");
-                    zipOut.putNextEntry(zipEntry);
-                    zipOut.write(stream);
-                }
+        //byte[] buffer = new byte[is.available()];
+        //is.read(buffer);
+        ObjectInputStream ois = new ObjectInputStream(is);
+        Object out = ois.readObject();
 
-            } else {
-                try (FileOutputStream outputStream = new FileOutputStream(path)) {
-                    outputStream.write(stream);
-                }
-            }
-        }
-        */
-        return null;
+        return out;
     }
 
-    private void writeToFile(Object obj, String path, boolean zip) throws IOException {
+    private void writeToFile(Object obj, String name, boolean zip) throws IOException {
 
-        byte[] stream = null;
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ObjectOutputStream oos = new ObjectOutputStream(baos);) {
-            oos.writeObject(obj);
-            stream = baos.toByteArray();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(obj);
+        byte[] stream = baos.toByteArray();
+
+        File f = new File(rootDir, name + ".bin");
+
+        FileOutputStream os = new FileOutputStream(f);
+        os.write(stream);
+        os.close();
+
+        if (zip) {
+
+            File zi = new File(rootDir, name + ".zip");
+            FileOutputStream fos = new FileOutputStream(zi);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+
+            zos.putNextEntry(new ZipEntry(f.getName()));
+
+            byte[] bytes = Files.readAllBytes(Paths.get(f.getPath()));
+            zos.write(bytes, 0, bytes.length);
+
+            zos.closeEntry();
+            zos.close();
+            fos.close();
+            f.delete();
+
         }
 
-        if (stream != null) {
-            path += (zip) ? ".zip" : ".ser";
-            if (zip) {//5
-                try (ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(path))) {
-                    ZipEntry zipEntry = new ZipEntry(path + ".bin");
-                    zipOut.putNextEntry(zipEntry);
-                    zipOut.write(stream);
-                }
-
-            } else {
-                try (FileOutputStream outputStream = new FileOutputStream(path)) {
-                    outputStream.write(stream);
-                }
-            }
-        }
     }
-
 
     private Object invoke(Method method, Object[] args) throws Throwable {
         try {
