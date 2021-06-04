@@ -64,7 +64,7 @@ public class CacheProxy implements InvocationHandler {
         key.addAll(Arrays.asList(argsToCache));
 
         Object invokeOut = null;
-        String name = Integer.toString(key.hashCode());
+        String name = cacheAn.fileNamePrefix() + Integer.toString(key.hashCode());
         if (cacheAn.cacheType() == CacheType.FILE) {
 
             File f = new File(rootDir, name + (cacheAn.zip() ? ".zip" : ".bin"));
@@ -96,14 +96,12 @@ public class CacheProxy implements InvocationHandler {
         InputStream is = null;
         File f = new File(rootDir, name + (zip?".zip":".bin"));
         if (zip) {
-
             FileInputStream fis = new FileInputStream(f);
             BufferedInputStream bis = new BufferedInputStream(fis);
             ZipInputStream stream = new ZipInputStream(bis);
             ZipEntry entry = stream.getNextEntry();
             ZipFile zipFile = new ZipFile(f);
             is = zipFile.getInputStream(entry);
-            System.out.print(is.toString());
         }
         else{
               is =  new FileInputStream(f);

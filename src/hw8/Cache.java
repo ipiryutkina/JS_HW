@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Cache {
-    String fileNamePrefix() default "data";
+    String fileNamePrefix() default "";
     boolean zip() default true;
     CacheType cacheType() default CacheType.FILE;
     int maxListSize() default 100_000;
